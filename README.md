@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # AMB - FT
 
 Sistema de integração CLT V8 Digital - Servidor API
@@ -77,8 +76,3 @@ pm2 save
 ## 📝 Licença
 
 Proprietário - Todos os direitos reservados
-
-=======
-# AMB---FT
-Repositório AMB - FT
->>>>>>> 9bd929035b52dce30a732015248dc8b0774faa38
