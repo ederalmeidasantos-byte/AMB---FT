@@ -1,0 +1,50 @@
+# Dependências
+node_modules/
+package-lock.json
+
+# Arquivos de ambiente
+.env
+config.env
+*.env
+
+# Logs
+logs/
+*.log
+
+# Cache
+data/
+cache/
+*.cache
+
+# Arquivos temporários
+temp/
+tmp/
+*.tmp
+
+# Arquivos de backup
+backup/
+*.backup
+*.bak
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Arquivos sensíveis
+*.key
+*.pem
+*.cert
+secrets/
+
+# PM2
+.pm2/
+ecosystem.config.cjs
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
