@@ -6,7 +6,20 @@ const helmet = require('helmet');
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config({ path: path.join(__dirname, 'config', 'config.env') });
+// ========================================
+// SISTEMA DE CONFIGURAÇÃO ISOLADA POR PORTA
+// ========================================
+const PORT_NUMBER = 5000; // Porta fixa para este servidor
+const { loadConfigForPort, getConfigPath, getConfigValue, setConfigValue } = require('./utils/config-loader');
+
+// Carregar configuração EXCLUSIVA da porta 5000 (sem fallback)
+const configPath = loadConfigForPort(PORT_NUMBER);
+require('dotenv').config({ path: configPath });
+
+// Log de confirmação
+console.log(`🔒 Ambiente isolado - Porta ${PORT_NUMBER}`);
+console.log(`📁 Config: ${configPath}`);
+console.log(`👤 V8 User: ${process.env.V8_USERNAME || 'não configurado'}`);
 
 // Importar rotas
 const cltRoutes = require('./routes/clt');
@@ -111,7 +124,7 @@ setInterval(limparLogsAntigos, 6 * 60 * 60 * 1000);
 setTimeout(limparLogsAntigos, 10000);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = PORT_NUMBER; // Usar porta fixa definida no início
 const HTTPS_PORT = process.env.HTTPS_PORT || 5443;
 
 // Carregar certificados SSL se existirem
@@ -427,9 +440,9 @@ app.get('/v8/operacoes', async (req, res) => {
   try {
     console.log('📋 Listando operações da V8 Digital...');
     
-    // Obter token
-    const { getValidToken } = require('./utils/auth');
-    const token = await getValidToken();
+    // Obter token usando sistema isolado da porta 5000
+    const { getValidToken } = require('./utils/auth-isolado');
+    const token = await getValidToken(PORT_NUMBER);
     
     // Obter parâmetros da query
     const startDate = req.query.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // Últimos 30 dias
@@ -1074,6 +1087,196 @@ app.get('/formulario/:cpf', async (req, res) => {
         </body>
       </html>
     `);
+  }
+});
+
+// ========================================
+// CONFIGURAÇÃO V8 DIGITAL
+// ========================================
+
+// Rota para página de configuração V8
+app.get('/config-v8', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'config-v8.html'));
+});
+
+app.get('/config-v8.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'config-v8.html'));
+});
+
+// Obter configuração atual V8 (sem expor senha completa)
+app.get('/config/v8/atual', (req, res) => {
+  try {
+    // Ler do arquivo de configuração EXCLUSIVO da porta 5000
+    const username = getConfigValue(PORT_NUMBER, 'V8_USERNAME') || '';
+    const password = getConfigValue(PORT_NUMBER, 'V8_PASSWORD') || '';
+    
+    res.json({
+      success: true,
+      port: PORT_NUMBER,
+      config: {
+        username: username,
+        password: password ? '***' : '' // Não expor senha completa
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao ler configuração: ' + error.message
+    });
+  }
+});
+
+// Salvar configuração V8
+app.post('/config/v8/salvar', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username e password são obrigatórios'
+      });
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(username)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username deve ser um email válido'
+      });
+    }
+
+    // Salvar no arquivo de configuração EXCLUSIVO da porta 5000
+    setConfigValue(PORT_NUMBER, 'V8_USERNAME', username);
+    setConfigValue(PORT_NUMBER, 'V8_PASSWORD', password);
+
+    // Atualizar variáveis de ambiente em memória
+    process.env.V8_USERNAME = username;
+    process.env.V8_PASSWORD = password;
+
+    // Limpar cache de token isolado da porta 5000 para forçar nova autenticação
+    try {
+      const { clearCacheForPort } = require('./utils/auth-isolado');
+      clearCacheForPort(PORT_NUMBER);
+    } catch (error) {
+      console.log('Aviso: não foi possível limpar cache de token isolado');
+    }
+
+    console.log(`✅ Configuração V8 atualizada: ${username}`);
+
+    res.json({
+      success: true,
+      message: 'Configuração salva com sucesso',
+      config: {
+        username: username
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro ao salvar configuração V8:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao salvar configuração: ' + error.message
+    });
+  }
+});
+
+// Testar conexão V8
+app.post('/config/v8/testar', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username e password são obrigatórios'
+      });
+    }
+
+    console.log(`🧪 Testando conexão V8 com usuário: ${username}`);
+
+    // Tentar autenticar com as credenciais fornecidas
+    const axios = require('axios');
+    const authData = 'grant_type=password&username=' + 
+      encodeURIComponent(username) + 
+      '&password=' + encodeURIComponent(password) + 
+      '&audience=' + encodeURIComponent(process.env.V8_AUDIENCE || 'https://bff.v8sistema.com') + 
+      '&scope=offline_access&client_id=' + encodeURIComponent(process.env.V8_CLIENT_ID || 'DHWogdaYmEI8n5bwwxPDzulMlSK7dwIn');
+
+    const response = await axios.post(
+      process.env.V8_AUTH_URL || 'https://auth.v8sistema.com/oauth/token',
+      authData,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+
+    if (response.data && response.data.access_token) {
+      console.log('✅ Teste de conexão V8 bem-sucedido');
+      res.json({
+        success: true,
+        message: 'Conexão testada com sucesso! Token obtido.',
+        token_info: {
+          expires_in: response.data.expires_in,
+          token_type: response.data.token_type
+        }
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Resposta inesperada da API V8'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Erro ao testar conexão V8:', error.response?.data || error.message);
+    console.error('📋 Detalhes do erro:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    
+    let errorMessage = 'Erro ao testar conexão';
+    if (error.response) {
+      const errorData = error.response.data;
+      const errorCode = errorData?.error || 'unknown_error';
+      const errorDescription = errorData?.error_description || errorData?.error || 'Erro desconhecido';
+      
+      if (error.response.status === 401 || error.response.status === 403) {
+        if (errorCode === 'invalid_grant') {
+          // Verificar se há descrição específica do erro
+          if (errorDescription && errorDescription.toLowerCase().includes('wrong email or password')) {
+            errorMessage = '❌ Email ou senha incorretos. Verifique se as credenciais estão corretas.';
+          } else if (errorDescription) {
+            errorMessage = `❌ Credenciais inválidas: ${errorDescription}`;
+          } else {
+            errorMessage = '❌ Credenciais inválidas. Verifique se o usuário e senha estão corretos.';
+          }
+        } else if (errorCode === 'invalid_client') {
+          errorMessage = '❌ Client ID inválido. Verifique a configuração do V8_CLIENT_ID.';
+        } else {
+          errorMessage = `❌ Erro de autenticação (${errorCode}): ${errorDescription}`;
+        }
+      } else if (error.response.status === 400) {
+        errorMessage = `Dados inválidos: ${errorDescription}`;
+      } else {
+        errorMessage = `Erro ${error.response.status}: ${errorDescription}`;
+      }
+    } else {
+      errorMessage = error.message || 'Erro de conexão com a API V8';
+    }
+
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: errorMessage,
+      error_code: error.response?.data?.error,
+      error_description: error.response?.data?.error_description
+    });
   }
 });
 
