@@ -1,0 +1,23 @@
+# V8 Digital API - Exemplo de Configuração
+# Copie este arquivo para config-{PORT}.env e preencha com suas credenciais
+
+V8_API_URL=https://api.v8digital.com
+V8_CLIENT_ID=DHWogdaYmEI8n5bwwxPDzulMlSK7dwIn
+V8_AUDIENCE=https://bff.v8sistema.com
+V8_AUTH_URL=https://auth.v8sistema.com/oauth/token
+V8_USERNAME=seu_email@dominio.com
+V8_PASSWORD=sua_senha
+
+# Kentro API
+KENTRO_API_URL=https://lunasdigital.atenderbem.com/int
+KENTRO_TOKEN=seu_token_kentro_aqui
+KENTRO_API_KEY=cd4d0509169d4e2ea9177ac66c1c9376
+KENTRO_QUEUE_ID=25
+
+# Servidor
+PORT=5000
+NODE_ENV=production
+
+# Logs
+LOG_LEVEL=info
+LOG_FILE=logs/app.log

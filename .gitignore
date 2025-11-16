@@ -1,49 +1,127 @@
 # Dependências
 node_modules/
-package-lock.json
-
-# Arquivos de ambiente
-.env
-config.env
-*.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Logs
 logs/
 *.log
 
-# Cache
-data/
-cache/
-*.cache
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# Arquivos temporários
-temp/
-tmp/
-*.tmp
+# Coverage directory used by tools like istanbul
+coverage/
 
-# Arquivos de backup
-backup/
-*.backup
-*.bak
+# nyc test coverage
+.nyc_output/
 
-# Arquivos do sistema
+# Grunt intermediate storage
+.grunt/
+
+# Bower dependency directory
+bower_components/
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# PM2 logs
+.pm2/
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
 
-# Arquivos sensíveis
-*.key
-*.pem
-*.cert
-secrets/
+# Temporary files
+tmp/
+temp/
 
-# PM2
-.pm2/
 
-# IDE
-.vscode/
-.idea/
-*.sublime-*
+# Project-specific sensitive files and data
+config/config.env
+config/config-*.env
+config/*.env
+!config/env-example.txt
+data/
 
+
+
+# Dados sensíveis de clientes
+LISTA CLIENTES CNPJ/
+
+# Arquivos de teste e análise temporários
+test-*.js
+analisar-*.js
+teste-*.json
+*.txt
+!README.txt
+!CHANGELOG*.txt
