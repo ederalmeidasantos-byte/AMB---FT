@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração V8 Digital - CLT V8 API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input[type="password"] {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .password-toggle-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #333;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .current-config {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .current-config h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .current-config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .current-config-item:last-child {
+            border-bottom: none;
+        }
+
+        .current-config-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .current-config-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .password-masked {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Configuração V8 Digital</h1>
+            <p id="portInfo">Configure suas credenciais de acesso à API V8 Digital</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div id="currentConfig" class="current-config" style="display: none;">
+            <h3>📋 Configuração Atual</h3>
+            <div id="currentConfigContent"></div>
+            <button type="button" class="btn-edit" onclick="abrirModalEdicao()">
+                ✏️ Editar Login
+            </button>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 12px; color: #666;">Processando...</p>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Editar Credenciais V8</h2>
+                <button class="close-modal" onclick="fecharModalEdicao()">&times;</button>
+            </div>
+
+            <div id="modalAlert" class="alert"></div>
+
+            <div class="info-box" style="margin-bottom: 24px;">
+                <p>
+                    <strong>ℹ️ Informação:</strong> As credenciais serão salvas no arquivo de configuração da porta <strong id="modalPortInfo">5000</strong>.
+                    Certifique-se de que as informações estão corretas antes de salvar.
+                </p>
+            </div>
+
+            <form id="modalConfigForm">
+                <div class="form-group">
+                    <label for="modalUsername">👤 Usuário (Email)</label>
+                    <input 
+                        type="email" 
+                        id="modalUsername" 
+                        name="modalUsername" 
+                        placeholder="seu_email@dominio.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="modalPassword">🔑 Senha</label>
+                    <div class="password-toggle">
+                        <input 
+                            type="password" 
+                            id="modalPassword" 
+                            name="modalPassword" 
+                            placeholder="Digite sua senha"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <button 
+                            type="button" 
+                            class="password-toggle-btn" 
+                            onclick="toggleModalPassword()"
+                        >
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="modalSubmitBtn">
+                    💾 Salvar Configuração
+                </button>
+
+                <button type="button" class="btn btn-secondary" onclick="testarConexaoModal()">
+                    🧪 Testar Conexão
+                </button>
+            </form>
+
+            <div id="modalLoading" class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 12px; color: #666;">Processando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detectar porta atual
+        const CURRENT_PORT = window.location.port || '5000';
+        
+        // Carregar configuração atual ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Atualizar informação da porta
+            document.getElementById('portInfo').textContent = 
+                `Configure suas credenciais de acesso à API V8 Digital - Porta ${CURRENT_PORT}`;
+            carregarConfiguracaoAtual();
+        });
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                fecharModalEdicao();
+            }
+        }
+
+        // Carregar configuração atual
+        async function carregarConfiguracaoAtual() {
+            try {
+                const response = await fetch('/config/v8/atual');
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('currentConfig').style.display = 'block';
+                    const content = document.getElementById('currentConfigContent');
+                    
+                    content.innerHTML = `
+                        <div class="current-config-item">
+                            <span class="current-config-label">Usuário:</span>
+                            <span class="current-config-value">${data.config.username || 'Não configurado'}</span>
+                        </div>
+                        <div class="current-config-item">
+                            <span class="current-config-label">Senha:</span>
+                            <span class="current-config-value password-masked">${data.config.password ? '••••••••' : 'Não configurado'}</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configuração:', error);
+            }
+        }
+
+        // Abrir modal de edição
+        function abrirModalEdicao() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('show');
+            
+            // Carregar valores atuais no modal
+            carregarValoresNoModal();
+            
+            // Atualizar informação da porta no modal
+            document.getElementById('modalPortInfo').textContent = CURRENT_PORT;
+        }
+
+        // Fechar modal de edição
+        function fecharModalEdicao() {
+            const modal = document.getElementById('editModal');
+            modal.classList.remove('show');
+            // Limpar formulário
+            document.getElementById('modalConfigForm').reset();
+            document.getElementById('modalAlert').classList.remove('show');
+        }
+
+        // Carregar valores atuais no modal
+        async function carregarValoresNoModal() {
+            try {
+                const response = await fetch('/config/v8/atual');
+                const data = await response.json();
+
+                if (data.success && data.config.username) {
+                    document.getElementById('modalUsername').value = data.config.username;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar valores:', error);
+            }
+        }
+
+        // Toggle password visibility no modal
+        function toggleModalPassword() {
+            const passwordInput = document.getElementById('modalPassword');
+            const toggleBtn = document.querySelector('#editModal .password-toggle-btn');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+
+        // Salvar configuração do modal
+        document.getElementById('modalConfigForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('modalUsername').value.trim();
+            const password = document.getElementById('modalPassword').value;
+
+            if (!username || !password) {
+                showModalAlert('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('modalSubmitBtn');
+            const loading = document.getElementById('modalLoading');
+
+            submitBtn.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/config/v8/salvar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showModalAlert('✅ Configuração salva com sucesso!', 'success');
+                    // Limpar campo de senha
+                    document.getElementById('modalPassword').value = '';
+                    // Recarregar configuração atual
+                    setTimeout(() => {
+                        carregarConfiguracaoAtual();
+                        fecharModalEdicao();
+                    }, 1500);
+                } else {
+                    showModalAlert('❌ Erro ao salvar: ' + (data.message || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                showModalAlert('❌ Erro ao conectar com o servidor: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        });
+
+        // Testar conexão do modal
+        async function testarConexaoModal() {
+            const username = document.getElementById('modalUsername').value.trim();
+            const password = document.getElementById('modalPassword').value;
+
+            if (!username || !password) {
+                showModalAlert('Por favor, preencha usuário e senha antes de testar.', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('modalLoading');
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/config/v8/testar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showModalAlert('✅ Conexão testada com sucesso! Token obtido.', 'success');
+                } else {
+                    showModalAlert('❌ Erro na conexão: ' + (data.message || 'Credenciais inválidas'), 'error');
+                }
+            } catch (error) {
+                showModalAlert('❌ Erro ao testar conexão: ' + error.message, 'error');
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        // Mostrar alerta no modal
+        function showModalAlert(message, type = 'info') {
+            const alert = document.getElementById('modalAlert');
+            alert.className = `alert alert-${type} show`;
+            alert.textContent = message;
+
+            // Auto-hide após 5 segundos
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+    </script>
+</body>
+</html>
