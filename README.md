@@ -15,7 +15,10 @@ Cada porta representa um ambiente **completamente isolado** de um cliente difere
 
 Cada ambiente tem:
 - ✅ Configuração isolada (`config/config-{PORT}.env`)
-- ✅ Cache de tokens isolado
+- ✅ Cache de tokens isolado (`token-v8-{PORT}.json`)
+- ✅ Cache de simulações isolado (`simulacoes-aprovadas-{PORT}.json`)
+- ✅ Cache de termos CLT isolado (armazenado junto com simulações)
+- ✅ Cache de dados de clientes isolado (armazenado junto com simulações)
 - ✅ Logs isolados
 - ✅ Processo PM2 separado
 
@@ -83,6 +86,14 @@ pm2 save
 - `POST /clt/fluxo-completo` - Executa fluxo completo CLT
 - `POST /clt/mensagem-whatsapp` - Gera mensagem WhatsApp
 
+### Cache (Isolado por Porta)
+- `GET /cache/simulacao/:cpf` - Busca simulação, termo e dados do cliente no cache
+- `POST /cache/simulacao/salvar` - Salva simulação, termo e dados do cliente no cache
+
+**⚠️ IMPORTANTE:** Cada porta tem seu próprio cache isolado:
+- **Porta 5000:** `simulacoes-aprovadas-5000.json` (contém simulações, termos CLT e dados de clientes)
+- **Porta 4000:** `simulacoes-aprovadas-4000.json` (contém simulações, termos CLT e dados de clientes)
+
 ### Health Check
 - `GET /health` - Status do servidor
 
@@ -93,23 +104,39 @@ clt-v8-service/
 ├── server.js              # Servidor porta 4000
 ├── server-5000.js         # Servidor porta 5000
 ├── config/
-│   ├── config-4000.env    # Config Cliente A (não commitado)
-│   ├── config-5000.env    # Config Cliente B (não commitado)
-│   ├── env-example.txt    # Exemplo de configuração
+│   ├── config.env         # Config Cliente A - Porta 4000 (não commitado)
+│   ├── config-5000.env    # Config Cliente B - Porta 5000 (não commitado)
+│   ├── config.env.example # Exemplo de configuração
 │   └── ecosystem.config.cjs # PM2 config
 ├── utils/
 │   ├── config-loader.js   # Carregador de config
 │   ├── auth-isolado.js    # Auth isolada por porta
+│   ├── auth-persistente.js # Auth porta 4000
 │   ├── clt-fluxo.js       # Lógica CLT
-│   └── cache-simulacoes.js # Cache
+│   └── cache-simulacoes.js # Cache isolado por porta
 ├── routes/
-│   ├── clt.js            # Rotas CLT
-│   └── auth.js           # Rotas auth
+│   └── clt.js            # Rotas CLT
 ├── public/
 │   └── config-v8.html    # Interface config
+├── data/
+│   └── cache/
+│       ├── token-v8-4000.json              # Token V8 porta 4000 (isolado)
+│       ├── token-v8-5000.json              # Token V8 porta 5000 (isolado)
+│       ├── simulacoes-aprovadas-4000.json  # Cache porta 4000 (isolado)
+│       └── simulacoes-aprovadas-5000.json  # Cache porta 5000 (isolado)
+├── resumo-clt-modelo-inss.html
+├── formulario-cadastro-proposta-v2.html
 └── docs/
-    └── PRD-AMBIENTES-ISOLADOS-V8.md # Documentação completa
+    └── PRD-SISTEMA-CLT-V8-COMPLETO.md # Documentação completa
 ```
+
+### Isolamento Total
+- ✅ **NÃO compartilha** configuração com outras portas
+- ✅ **NÃO compartilha** tokens V8 com outras portas
+- ✅ **NÃO compartilha** cache de simulações com outras portas
+- ✅ **NÃO compartilha** cache de termos CLT com outras portas
+- ✅ **NÃO compartilha** dados de clientes com outras portas
+- ✅ **NÃO interfere** em outras portas
 
 ## 🔧 Comandos Úteis
 
@@ -151,11 +178,15 @@ netstat -tlnp | grep 5000
 
 ## 📚 Documentação Completa
 
-Consulte `docs/PRD-AMBIENTES-ISOLADOS-V8.md` para:
+- **README-PORTA-5000.md** - Documentação específica da porta 5000
+- **docs/PRD-SISTEMA-CLT-V8-COMPLETO.md** - PRD completo do sistema
+
+Documentação inclui:
 - Arquitetura completa
 - APIs da V8 Digital
 - Todos os endpoints
 - Como adicionar novas portas
+- Isolamento de cache (tokens, simulações, termos e clientes)
 - Troubleshooting
 
 ## 🆘 Suporte
